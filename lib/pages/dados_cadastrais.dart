@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:login/repositories/linguages_repository.dart';
 import 'package:login/repositories/nivel_repository.dart';
 import 'package:login/shared/widgets/text_label.dart';
 
@@ -15,15 +16,35 @@ class _DadosCadastraisPageState extends State<DadosCadastraisPage> {
       TextEditingController(text: "");
   DateTime? dataNascimento;
   var nivelRepository = NivelRepository();
+  var linguagensRepository = LinguagensRepository();
   var niveis = [];
   var nivelSelecionado = "";
+  var linguagens = [];
+  var linguagensSelecionadas = [];
+  double salarioEscolhido = 0;
+  int tempoExperiencia = 2;
 
   @override
   void initState() {
     // TODO: implement initState
     niveis = nivelRepository.retornaNiveis();
+    linguagens = linguagensRepository.retornaLinguagens();
 
     super.initState();
+  }
+
+  List<DropdownMenuItem<int>> returnItens(int quantidadeMaxima) {
+    var itens = <DropdownMenuItem<int>>[];
+    for (var i = 0; i <= quantidadeMaxima; i++) {
+      itens.add(
+        DropdownMenuItem(
+          child: Text(i.toString()),
+          value: i, // Valor 0 corresponde ao valor inicial
+        ),
+      );
+    }
+
+    return itens;
   }
 
   @override
@@ -36,8 +57,7 @@ class _DadosCadastraisPageState extends State<DadosCadastraisPage> {
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child: ListView(children: [
             TextLabel(texto: "Nome"),
             TextField(
               controller: nomeController,
@@ -73,6 +93,50 @@ class _DadosCadastraisPageState extends State<DadosCadastraisPage> {
                           });
                         }))
                     .toList()),
+            TextLabel(texto: "Linguagens:"),
+            Column(
+              children: linguagens
+                  .map((linguagem) => CheckboxListTile(
+                      dense: true,
+                      title: Text(linguagem),
+                      value: linguagensSelecionadas.contains(linguagem),
+                      onChanged: (bool? value) {
+                        if (value!) {
+                          setState(() {
+                            linguagensSelecionadas.add(linguagem);
+                          });
+                        } else {
+                          setState(() {
+                            linguagensSelecionadas.remove(linguagem);
+                          });
+                        }
+                      }))
+                  .toList(),
+            ),
+            TextLabel(texto: "Tempo de experiência:"),
+            DropdownButton(
+              value: tempoExperiencia,
+              isExpanded: true,
+              items: returnItens(50),
+              // Adicione outros itens conforme necessário
+              onChanged: (value) {
+                setState(() {
+                  tempoExperiencia = value!;
+                });
+              },
+            ),
+            TextLabel(
+                texto:
+                    "Pretenção Salarial. R\$ ${salarioEscolhido.round().toString()}"),
+            Slider(
+                min: 0,
+                max: 10000,
+                value: salarioEscolhido,
+                onChanged: (double value) {
+                  setState(() {
+                    salarioEscolhido = value;
+                  });
+                }),
             TextButton(
               onPressed: () {
                 print(nomeController.text);
