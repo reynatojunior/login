@@ -24,6 +24,8 @@ class _DadosCadastraisPageState extends State<DadosCadastraisPage> {
   double salarioEscolhido = 0;
   int tempoExperiencia = 2;
 
+  bool salvando = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -57,93 +59,140 @@ class _DadosCadastraisPageState extends State<DadosCadastraisPage> {
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: ListView(children: [
-            TextLabel(texto: "Nome"),
-            TextField(
-              controller: nomeController,
-            ),
-            TextLabel(texto: "Data de Nascimento"),
-            TextField(
-              controller: dataNascimentoController,
-              readOnly: true,
-              onTap: () async {
-                var data = await showDatePicker(
-                    context: context,
-                    firstDate: DateTime(1900, 1, 1),
-                    lastDate: DateTime(2030, 12, 31));
-                if (data != null) {
-                  dataNascimentoController.text = data.toString();
-                  dataNascimento = data;
-                }
-              },
-            ),
-            TextLabel(texto: "Nível de experiência"),
-            Column(
-                children: niveis
-                    .map((nivel) => RadioListTile(
-                        dense: true,
-                        title: Text(nivel.toString()),
-                        selected: nivelSelecionado == nivel,
-                        value: nivel,
-                        groupValue: nivelSelecionado,
-                        onChanged: (value) {
-                          print(value);
-                          setState(() {
-                            nivelSelecionado = value.toString();
-                          });
-                        }))
-                    .toList()),
-            TextLabel(texto: "Linguagens:"),
-            Column(
-              children: linguagens
-                  .map((linguagem) => CheckboxListTile(
-                      dense: true,
-                      title: Text(linguagem),
-                      value: linguagensSelecionadas.contains(linguagem),
-                      onChanged: (bool? value) {
-                        if (value!) {
-                          setState(() {
-                            linguagensSelecionadas.add(linguagem);
-                          });
-                        } else {
-                          setState(() {
-                            linguagensSelecionadas.remove(linguagem);
-                          });
-                        }
-                      }))
-                  .toList(),
-            ),
-            TextLabel(texto: "Tempo de experiência:"),
-            DropdownButton(
-              value: tempoExperiencia,
-              isExpanded: true,
-              items: returnItens(50),
-              // Adicione outros itens conforme necessário
-              onChanged: (value) {
-                setState(() {
-                  tempoExperiencia = value!;
-                });
-              },
-            ),
-            TextLabel(
-                texto:
-                    "Pretenção Salarial. R\$ ${salarioEscolhido.round().toString()}"),
-            Slider(
-                min: 0,
-                max: 10000,
-                value: salarioEscolhido,
-                onChanged: (double value) {
-                  setState(() {
-                    salarioEscolhido = value;
-                  });
-                }),
-            TextButton(
-              onPressed: () {
-                print(nomeController.text);
-              },
-              child: Text("Salvar"),
-            ),
-          ]),
+          child: salvando
+              ? Center(child: CircularProgressIndicator())
+              : ListView(children: [
+                  TextLabel(texto: "Nome"),
+                  TextField(
+                    controller: nomeController,
+                  ),
+                  TextLabel(texto: "Data de Nascimento"),
+                  TextField(
+                    controller: dataNascimentoController,
+                    readOnly: true,
+                    onTap: () async {
+                      var data = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime(1900, 1, 1),
+                          lastDate: DateTime(2030, 12, 31));
+                      if (data != null) {
+                        dataNascimentoController.text = data.toString();
+                        dataNascimento = data;
+                      }
+                    },
+                  ),
+                  TextLabel(texto: "Nível de experiência"),
+                  Column(
+                      children: niveis
+                          .map((nivel) => RadioListTile(
+                              dense: true,
+                              title: Text(nivel.toString()),
+                              selected: nivelSelecionado == nivel,
+                              value: nivel,
+                              groupValue: nivelSelecionado,
+                              onChanged: (value) {
+                                print(value);
+                                setState(() {
+                                  nivelSelecionado = value.toString();
+                                });
+                              }))
+                          .toList()),
+                  TextLabel(texto: "Linguagens:"),
+                  Column(
+                    children: linguagens
+                        .map((linguagem) => CheckboxListTile(
+                            dense: true,
+                            title: Text(linguagem),
+                            value: linguagensSelecionadas.contains(linguagem),
+                            onChanged: (bool? value) {
+                              if (value!) {
+                                setState(() {
+                                  linguagensSelecionadas.add(linguagem);
+                                });
+                              } else {
+                                setState(() {
+                                  linguagensSelecionadas.remove(linguagem);
+                                });
+                              }
+                            }))
+                        .toList(),
+                  ),
+                  TextLabel(texto: "Tempo de experiência:"),
+                  DropdownButton(
+                    value: tempoExperiencia,
+                    isExpanded: true,
+                    items: returnItens(50),
+                    // Adicione outros itens conforme necessário
+                    onChanged: (value) {
+                      setState(() {
+                        tempoExperiencia = value!;
+                      });
+                    },
+                  ),
+                  TextLabel(
+                      texto:
+                          "Pretenção Salarial. R\$ ${salarioEscolhido.round().toString()}"),
+                  Slider(
+                      min: 0,
+                      max: 10000,
+                      value: salarioEscolhido,
+                      onChanged: (double value) {
+                        setState(() {
+                          salarioEscolhido = value;
+                        });
+                      }),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        salvando = false;
+                      });
+                      if (nomeController.text.trim().length < 3) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("O nome deve ser preenchido")));
+                        return;
+                      }
+                      if (dataNascimento == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Data de nascimento invalida")));
+                        return;
+                      }
+                      if (nivelSelecionado.trim() == '') {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("O Nivel deve ser selecionado")));
+                        return;
+                      }
+                      if (linguagensSelecionadas.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content:
+                                Text("Selecione pelo menos uma linguagem")));
+                        return;
+                      }
+                      if (tempoExperiencia == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                "Deve ter ao menos 1 ano de experiência")));
+                        return;
+                      }
+                      if (salarioEscolhido == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Preencha a pretenção salarial!")));
+                        return;
+                      }
+
+                      setState(() {
+                        salvando = true;
+                      });
+
+                      Future.delayed(Duration(seconds: 3), () {
+                        setState(() {
+                          salvando = false;
+                        });
+                        Navigator.pop(context);
+                      });
+                    },
+                    child: Text("Salvar"),
+                  ),
+                ]),
         ),
       ),
     );
